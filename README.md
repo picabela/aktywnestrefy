@@ -43,9 +43,14 @@ Baza tworzy się automatycznie w `data/aktywnestrefy.sqlite`.
    (reguły mod_rewrite są w `public/.htaccess`).
 2. Upewnij się, że PHP ma rozszerzenia `pdo_sqlite` i `curl`, a katalog `data/`
    jest zapisywalny przez PHP.
-3. Ustaw crona odświeżającego dane raz dziennie/tygodniowo:
+3. Ustaw crony:
    ```
+   # odświeżanie danych z OpenStreetMap (raz w tygodniu, poniedziałek 4:15)
    15 4 * * 1 php /sciezka/do/bin/import.php >> /sciezka/do/data/import.log 2>&1
+
+   # dogęszczanie adresów lokalizacji (co noc porcja 600 obiektów, ~11 minut;
+   # po kilkunastu nocach cała baza ma adresy, potem kończy się natychmiast)
+   30 2 * * * php /sciezka/do/bin/geocode.php >> /sciezka/do/data/geocode.log 2>&1
    ```
 4. Zgłoś `https://aktywnestrefy.pl/sitemap.xml` w Google Search Console.
 
@@ -54,6 +59,7 @@ Baza tworzy się automatycznie w `data/aktywnestrefy.sqlite`.
 ```
 config.php          konfiguracja, kategorie, słowniki tagów OSM → PL
 bin/import.php      importer Overpass API (upsert do SQLite)
+bin/geocode.php     dogęszczanie adresów obiektów (Nominatim, 1 zapyt./sek.)
 src/
   Database.php      połączenie + migracje SQLite
   Repo.php          zapytania (nearby, bbox, miasta, opinie…)
