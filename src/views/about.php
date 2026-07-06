@@ -6,17 +6,6 @@
 </section>
 
 <section class="section prose">
-  <h2>Skąd mamy dane?</h2>
-  <p>Wszystkie obiekty w katalogu pochodzą z <a href="https://www.openstreetmap.org" rel="noopener">OpenStreetMap</a> (OSM) — otwartej mapy świata tworzonej przez miliony wolontariuszy. Pobieramy je przez <a href="https://overpass-api.de" rel="noopener">Overpass API</a> i regularnie odświeżamy. Dane OSM udostępniane są na licencji <a href="https://opendatacommons.org/licenses/odbl/" rel="noopener">Open Database License (ODbL)</a>, © autorzy OpenStreetMap.</p>
-
-  <h2>Czego szukamy w OSM?</h2>
-  <ul>
-    <li><strong>Siłownie plenerowe</strong> — obiekty z tagiem <code>leisure=fitness_station</code>, wraz z listą urządzeń (<code>fitness_station:*</code>).</li>
-    <li><strong>Parki kalisteniki / street workout</strong> — obiekty z <code>sport=calisthenics</code> oraz stacje fitness złożone wyłącznie z drążków i poręczy.</li>
-    <li><strong>Skateparki</strong> — obiekty z <code>sport=skateboard</code>.</li>
-    <li><strong>Pumptracki</strong> — tory z <code>sport=bmx</code> lub nazwą zawierającą „pumptrack".</li>
-  </ul>
-
   <h2>Brakuje obiektu? Dodaj go — to proste</h2>
   <ol>
     <li>Wejdź na <a href="https://www.openstreetmap.org" rel="noopener">openstreetmap.org</a> i załóż darmowe konto.</li>

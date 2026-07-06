@@ -38,14 +38,12 @@ $this_faq = $cat['faq'];
   <?php endif; ?>
 </section>
 
-<section class="section faq" itemscope itemtype="https://schema.org/FAQPage">
+<section class="section faq">
   <h2>Najczęstsze pytania</h2>
   <?php foreach ($this_faq as [$q, $a]): ?>
-  <details itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
-    <summary itemprop="name"><?= e($q) ?></summary>
-    <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">
-      <p itemprop="text"><?= e($a) ?></p>
-    </div>
+  <details>
+    <summary><?= e($q) ?></summary>
+    <p><?= e($a) ?></p>
   </details>
   <?php endforeach; ?>
 </section>

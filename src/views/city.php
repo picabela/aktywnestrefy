@@ -37,6 +37,7 @@
         <div>
           <h3><?= e(place_display_name($p)) ?></h3>
           <p class="muted">
+            <?= $p['address'] ? '📍 ' . e($p['address']) . ' · ' : '' ?>
             <?= $p['district'] ? e($p['district']) . ' · ' : '' ?>
             <?php if ($eq): ?><?= e(implode(', ', array_slice($eq, 0, 4))) ?><?= count($eq) > 4 ? '…' : '' ?><?php endif; ?>
             <?php if ($p['lit']): ?> · 💡 oświetlenie<?php endif; ?>
@@ -48,6 +49,19 @@
     <?php endforeach; ?>
   </div>
 </section>
+
+<?php if (!empty($crossCats)): ?>
+<section class="section">
+  <h2>Inne miejsca aktywności — <?= e($cityName) ?></h2>
+  <div class="city-cloud">
+    <?php foreach ($crossCats as $cc): ?>
+      <a class="city-pill" href="<?= e(city_url($cc['category'], $citySlug)) ?>">
+        <?= e(CATEGORIES[$cc['category']]['name']) ?> <?= e($cityName) ?> <small><?= (int)$cc['c'] ?></small>
+      </a>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
 
 <section class="section seo-text">
   <h2><?= e($cat['name']) ?> w mieście <?= e($cityName) ?> — co warto wiedzieć</h2>

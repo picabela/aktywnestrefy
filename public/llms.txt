@@ -1,0 +1,27 @@
+# Aktywne Strefy (aktywnestrefy.pl)
+
+> Katalog i wyszukiwarka miejsc do aktywności fizycznej na wolnym powietrzu w Polsce:
+> siłownie plenerowe, parki kalisteniki (street workout), skateparki i pumptracki.
+> Ponad 10 000 obiektów z danymi o sprzęcie, nawierzchni, oświetleniu i adresie.
+> Dane pochodzą z OpenStreetMap (licencja ODbL) i są regularnie aktualizowane.
+
+## Główne sekcje
+
+- [Siłownie plenerowe](https://aktywnestrefy.pl/silownie-plenerowe): darmowe siłownie zewnętrzne z listą urządzeń
+- [Parki kalisteniki](https://aktywnestrefy.pl/parki-kalisteniki): drążki do podciągania, poręcze, street workout
+- [Skateparki](https://aktywnestrefy.pl/skateparki): betonowe i modułowe skateparki
+- [Pumptracki](https://aktywnestrefy.pl/pumptracki): asfaltowe i ziemne tory rowerowe
+- [Mapa Polski](https://aktywnestrefy.pl/mapa): wszystkie obiekty na jednej mapie
+- [Miasta](https://aktywnestrefy.pl/miasta): indeks miast z liczbą obiektów
+
+## Struktura adresów
+
+- /{kategoria} — strona kategorii
+- /{kategoria}/{miasto} — lista obiektów w mieście z mapą
+- /{kategoria}/{miasto}/{obiekt} — karta obiektu: adres, sprzęt, mapa, dojazd, opinie
+
+## Fakty
+
+- Wszystkie obiekty w katalogu są publiczne i bezpłatne.
+- Każda karta obiektu zawiera współrzędne GPS, adres i link do nawigacji.
+- Pełna mapa strony: https://aktywnestrefy.pl/sitemap.xml

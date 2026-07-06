@@ -15,8 +15,13 @@ $jsonld = [
     'geo'      => ['@type' => 'GeoCoordinates', 'latitude' => $lat, 'longitude' => $lon],
     'isAccessibleForFree' => true,
 ];
-if ($place['city']) {
-    $jsonld['address'] = ['@type' => 'PostalAddress', 'addressLocality' => $place['city'], 'addressCountry' => 'PL'];
+if ($place['city'] || $place['address']) {
+    $jsonld['address'] = array_filter([
+        '@type'           => 'PostalAddress',
+        'streetAddress'   => $place['address'] ?: null,
+        'addressLocality' => $place['city'] ?: null,
+        'addressCountry'  => 'PL',
+    ]);
 }
 if ($rating['count'] > 0) {
     $jsonld['aggregateRating'] = ['@type' => 'AggregateRating', 'ratingValue' => $rating['avg'], 'reviewCount' => $rating['count']];
@@ -35,7 +40,7 @@ if ($rating['count'] > 0) {
   <span class="badge" style="--cat-color: <?= e($cat['color']) ?>"><?= e($cat['singular']) ?></span>
   <h1><?= e($displayName) ?></h1>
   <p class="lead">
-    <?= $place['district'] ? e($place['district']) . ', ' : '' ?><?= e($place['city'] ?: 'Polska') ?>
+    <?php if ($place['address']): ?>📍 <?= e($place['address']) ?>, <?php endif; ?><?= $place['district'] ? e($place['district']) . ', ' : '' ?><?= e($place['city'] ?: 'Polska') ?>
     <?php if ($rating['count'] > 0): ?>
       · ⭐ <?= number_format($rating['avg'], 1, ',', '') ?>/5 (<?= $rating['count'] ?> <?= polish_plural($rating['count'], 'opinia', 'opinie', 'opinii') ?>)
     <?php endif; ?>
@@ -57,6 +62,13 @@ if ($rating['count'] > 0) {
       <button type="button" class="btn btn-outline" data-share data-share-title="<?= e($displayName) ?>">↗ Udostępnij</button>
     </div>
 
+    <section class="section place-desc">
+      <h2>O tym miejscu</h2>
+      <?php foreach ($description as $par): ?>
+        <p><?= e($par) ?></p>
+      <?php endforeach; ?>
+    </section>
+
     <?php if ($equipment): ?>
     <section class="section">
       <h2>Sprzęt i wyposażenie</h2>
@@ -69,6 +81,8 @@ if ($rating['count'] > 0) {
     <section class="section">
       <h2>Informacje</h2>
       <dl class="info-grid">
+        <?php if ($place['address']): ?><dt>Adres</dt><dd><?= e($place['address']) ?><?= $place['city'] ? ', ' . e($place['city']) : '' ?></dd>
+        <?php elseif ($place['city']): ?><dt>Lokalizacja</dt><dd><?= $place['district'] ? e($place['district']) . ', ' : '' ?><?= e($place['city']) ?></dd><?php endif; ?>
         <?php if (surface_label($place['surface'])): ?><dt>Nawierzchnia</dt><dd><?= e(surface_label($place['surface'])) ?></dd><?php endif; ?>
         <?php if ($place['lit'] !== null): ?><dt>Oświetlenie</dt><dd><?= $place['lit'] ? '💡 tak — potrenujesz po zmroku' : 'brak' ?></dd><?php endif; ?>
         <?php if ($place['covered'] !== null): ?><dt>Zadaszenie</dt><dd><?= $place['covered'] ? 'tak' : 'nie' ?></dd><?php endif; ?>
@@ -84,6 +98,16 @@ if ($rating['count'] > 0) {
       <div class="weather-widget" data-weather data-lat="<?= $lat ?>" data-lon="<?= $lon ?>">
         <p class="muted">Ładowanie prognozy…</p>
       </div>
+    </section>
+
+    <section class="section faq">
+      <h2>Pytania i odpowiedzi</h2>
+      <?php foreach ($faq as [$q, $a]): ?>
+      <details>
+        <summary><?= e($q) ?></summary>
+        <p><?= e($a) ?></p>
+      </details>
+      <?php endforeach; ?>
     </section>
 
     <section class="section" id="opinie">

@@ -68,6 +68,15 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 
 CREATE INDEX IF NOT EXISTS idx_reviews_place ON reviews (place_id);
+SQL);
+
+        // Migracja: kolumna adresu (ulica + numer) dla starszych baz
+        $cols = $pdo->query("PRAGMA table_info(places)")->fetchAll(PDO::FETCH_COLUMN, 1);
+        if (!in_array('address', $cols, true)) {
+            $pdo->exec('ALTER TABLE places ADD COLUMN address TEXT');
+        }
+
+        $pdo->exec(<<<SQL
 
 CREATE TABLE IF NOT EXISTS reports (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,

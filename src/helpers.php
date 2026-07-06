@@ -85,6 +85,40 @@ function surface_label(?string $surface): ?string
     return SURFACE_LABELS[$surface] ?? str_replace('_', ' ', $surface);
 }
 
+/**
+ * Reverse-geokodowanie Nominatim (adres z współrzędnych).
+ * Wywoływane leniwie — raz na obiekt, wynik zapisywany w bazie.
+ * Zwraca adres, pusty string (brak adresu w okolicy) lub null (błąd sieci — spróbujemy ponownie).
+ */
+function reverse_geocode(float $lat, float $lon): ?string
+{
+    $url = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=17'
+         . '&lat=' . $lat . '&lon=' . $lon . '&accept-language=pl';
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 3,
+        CURLOPT_CONNECTTIMEOUT => 2,
+        CURLOPT_USERAGENT      => APP_NAME . ' (+' . APP_URL . '; ' . APP_EMAIL . ')',
+    ]);
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+    if ($body === false || $status !== 200) {
+        return null;
+    }
+    $a = json_decode($body, true)['address'] ?? [];
+    $street = $a['road'] ?? $a['pedestrian'] ?? $a['footway'] ?? null;
+    if ($street === null) {
+        return '';
+    }
+    $addr = $street . (isset($a['house_number']) ? ' ' . $a['house_number'] : '');
+    if (isset($a['postcode'])) {
+        $addr .= ', ' . $a['postcode'];
+    }
+    return $addr;
+}
+
 /** Render szablonu widoku */
 function view(string $template, array $data = []): string
 {

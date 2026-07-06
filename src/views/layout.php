@@ -11,15 +11,25 @@
 <meta property="og:description" content="<?= e($meta_description ?? '') ?>">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="<?= APP_NAME ?>">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:image" content="<?= APP_URL ?>/assets/img/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <?php if (!empty($canonical)): ?><meta property="og:url" content="<?= e($canonical) ?>"><?php endif; ?>
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?= e($title ?? APP_NAME) ?>">
+<meta name="twitter:description" content="<?= e($meta_description ?? '') ?>">
+<meta name="twitter:image" content="<?= APP_URL ?>/assets/img/og-cover.png">
+<meta name="theme-color" content="#e0332c">
+<?= $head_extra ?? '' ?>
 <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg">
 <link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="/assets/css/style.css?v=1">
 <script defer src="/assets/vendor/leaflet/leaflet.js"></script>
 <script defer src="/assets/js/app.js?v=1"></script>
-<?php if (!empty($jsonld)): ?>
-<script type="application/ld+json"><?= json_encode($jsonld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
-<?php endif; ?>
+<?php foreach (($jsonld ?? []) as $schema): ?>
+<script type="application/ld+json"><?= json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php endforeach; ?>
 </head>
 <body>
 <header class="site-header">

@@ -57,10 +57,10 @@ $pdo->beginTransaction();
 $upsert = $pdo->prepare(<<<SQL
 INSERT INTO places (osm_type, osm_id, category, name, lat, lon, city, city_slug,
                     district, district_slug, slug, equipment, surface, lit, covered,
-                    access, opening_hours, website, tags, updated_at)
+                    access, opening_hours, website, address, tags, updated_at)
 VALUES (:osm_type, :osm_id, :category, :name, :lat, :lon, :city, :city_slug,
         :district, :district_slug, :slug, :equipment, :surface, :lit, :covered,
-        :access, :opening_hours, :website, :tags, datetime('now'))
+        :access, :opening_hours, :website, :address, :tags, datetime('now'))
 ON CONFLICT (osm_type, osm_id) DO UPDATE SET
     category = excluded.category, name = excluded.name,
     lat = excluded.lat, lon = excluded.lon,
@@ -69,6 +69,7 @@ ON CONFLICT (osm_type, osm_id) DO UPDATE SET
     equipment = excluded.equipment, surface = excluded.surface,
     lit = excluded.lit, covered = excluded.covered, access = excluded.access,
     opening_hours = excluded.opening_hours, website = excluded.website,
+    address = COALESCE(excluded.address, places.address),
     tags = excluded.tags, updated_at = datetime('now')
 SQL);
 
@@ -129,6 +130,7 @@ foreach ($elements as $el) {
         ':access'        => $access,
         ':opening_hours' => $tags['opening_hours'] ?? null,
         ':website'       => $tags['website'] ?? $tags['contact:website'] ?? null,
+        ':address'       => build_address($tags),
         ':tags'          => json_encode($tags, JSON_UNESCAPED_UNICODE),
     ]);
     $imported++;
@@ -175,6 +177,20 @@ function categorize(array $tags): ?string
         return ($bars >= 2 && $machines === 0) ? 'parki-kalisteniki' : 'silownie-plenerowe';
     }
     return null;
+}
+
+/** Adres z tagów addr:* (np. "ul. Prosta 12, 30-001") — null, gdy brak ulicy */
+function build_address(array $tags): ?string
+{
+    $street = $tags['addr:street'] ?? $tags['addr:place'] ?? null;
+    if ($street === null) {
+        return null;
+    }
+    $addr = $street . (isset($tags['addr:housenumber']) ? ' ' . $tags['addr:housenumber'] : '');
+    if (isset($tags['addr:postcode'])) {
+        $addr .= ', ' . $tags['addr:postcode'];
+    }
+    return $addr;
 }
 
 function extract_equipment(array $tags): array

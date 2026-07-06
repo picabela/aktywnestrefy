@@ -149,6 +149,25 @@ final class Repo
         return $st->fetchAll();
     }
 
+    /** Liczba obiektów w pozostałych kategoriach w tym samym mieście (linkowanie wewnętrzne) */
+    public static function categoriesInCity(string $citySlug, string $exceptCategory): array
+    {
+        $st = Database::get()->prepare(
+            'SELECT category, city, COUNT(*) c FROM places
+             WHERE city_slug = ? AND category != ?
+             GROUP BY category ORDER BY c DESC'
+        );
+        $st->execute([$citySlug, $exceptCategory]);
+        return $st->fetchAll();
+    }
+
+    /** Zapis adresu zdobytego reverse-geokodowaniem */
+    public static function setAddress(int $placeId, string $address): void
+    {
+        $st = Database::get()->prepare('UPDATE places SET address = ? WHERE id = ?');
+        $st->execute([$address, $placeId]);
+    }
+
     /* ── Opinie ─────────────────────────────────────────── */
 
     public static function reviews(int $placeId): array

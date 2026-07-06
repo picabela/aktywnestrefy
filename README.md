@@ -71,13 +71,18 @@ data/               baza SQLite (tworzona automatycznie)
 - Wyszukiwanie po **adresie** (geokodowanie Nominatim) lub **geolokalizacji**
   („📍 Blisko mnie"), wyniki sortowane po odległości
 - Strony **kategoria → miasto → obiekt** z czystymi URL-ami i unikalnymi meta tagami
-- Karta obiektu: mapa, **lista sprzętu po polsku**, nawierzchnia, oświetlenie,
-  **Street View / Mapillary**, nawigacja Google Maps, **prognoza pogody na trening**
+- Karta obiektu: mapa, **adres** (z tagów OSM lub reverse-geokodowania Nominatim,
+  cache'owany w bazie), **lista sprzętu po polsku**, nawierzchnia, oświetlenie,
+  **Street View / Mapillary**, nawigacja Google Maps, **prognoza pogody na trening**,
+  auto-generowany opis i FAQ (programmatic SEO)
 - **Opinie i oceny** użytkowników (SQLite, honeypot antyspamowy)
 - **Ulubione miejsca** w localStorage (bez kont)
 - Zgłaszanie błędów w danych + instrukcja poprawiania OSM
 - `sitemap.xml` generowany dynamicznie, dane strukturalne
-  (schema.org `SportsActivityLocation`, `FAQPage`, `AggregateRating`)
+  (schema.org `SportsActivityLocation`, `FAQPage`, `AggregateRating`,
+  `BreadcrumbList`, `ItemList`, `WebSite`+`SearchAction`, `Organization`),
+  geo meta tagi, Open Graph + Twitter Cards, `llms.txt` dla wyszukiwarek AI
+- Wymuszone HTTPS i domena bez www (301 w `.htaccess`)
 - Tryb ciemny, RWD, pełnoekranowa mapa Polski z filtrem kategorii
 
 ## Licencja danych

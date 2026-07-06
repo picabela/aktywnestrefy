@@ -30,6 +30,22 @@ require ROOT_DIR . '/src/helpers.php';
 require ROOT_DIR . '/src/Database.php';
 require ROOT_DIR . '/src/Cities.php';
 require ROOT_DIR . '/src/Repo.php';
+require ROOT_DIR . '/src/SeoText.php';
+
+/** Schema.org BreadcrumbList z listy par [nazwa, url] */
+function breadcrumb_schema(array $crumbs): array
+{
+    $items = [];
+    foreach ($crumbs as $i => [$name, $url]) {
+        $items[] = [
+            '@type'    => 'ListItem',
+            'position' => $i + 1,
+            'name'     => $name,
+            'item'     => APP_URL . $url,
+        ];
+    }
+    return ['@context' => 'https://schema.org', '@type' => 'BreadcrumbList', 'itemListElement' => $items];
+}
 
 $uri = rawurldecode(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
 $uri = rtrim($uri, '/') ?: '/';
@@ -110,6 +126,27 @@ if ($uri === '/') {
         'total'            => Repo::countAll(),
         'topCities'        => Repo::topCities(16),
         'latest'           => Repo::latest(6),
+        'jsonld'           => [
+            [
+                '@context' => 'https://schema.org',
+                '@type'    => 'WebSite',
+                'name'     => 'Aktywne Strefy',
+                'url'      => APP_URL . '/',
+                'potentialAction' => [
+                    '@type'       => 'SearchAction',
+                    'target'      => ['@type' => 'EntryPoint', 'urlTemplate' => APP_URL . '/szukaj?q={search_term_string}'],
+                    'query-input' => 'required name=search_term_string',
+                ],
+            ],
+            [
+                '@context' => 'https://schema.org',
+                '@type'    => 'Organization',
+                'name'     => 'Aktywne Strefy',
+                'url'      => APP_URL . '/',
+                'logo'     => APP_URL . '/assets/img/logo.svg',
+                'email'    => APP_EMAIL,
+            ],
+        ],
     ]);
     exit;
 }
@@ -199,6 +236,18 @@ if (isset(CATEGORIES[$catSlug])) {
             'cat'              => $cat,
             'cities'           => Repo::citiesForCategory($catSlug),
             'counts'           => Repo::countByCategory(),
+            'jsonld'           => [
+                breadcrumb_schema([['Start', '/'], [$cat['name'], '/' . $catSlug]]),
+                [
+                    '@context'   => 'https://schema.org',
+                    '@type'      => 'FAQPage',
+                    'mainEntity' => array_map(fn($f) => [
+                        '@type'          => 'Question',
+                        'name'           => $f[0],
+                        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f[1]],
+                    ], $cat['faq']),
+                ],
+            ],
         ]);
         exit;
     }
@@ -223,6 +272,26 @@ if (isset(CATEGORIES[$catSlug])) {
             'cityName'         => $cityName,
             'places'           => $places,
             'districts'        => Repo::districtsInCity($catSlug, $citySlug),
+            'crossCats'        => Repo::categoriesInCity($citySlug, $catSlug),
+            'jsonld'           => [
+                breadcrumb_schema([
+                    ['Start', '/'],
+                    [$cat['name'], '/' . $catSlug],
+                    [$cityName, city_url($catSlug, $citySlug)],
+                ]),
+                [
+                    '@context'        => 'https://schema.org',
+                    '@type'           => 'ItemList',
+                    'name'            => $cat['name'] . ' — ' . $cityName,
+                    'numberOfItems'   => $n,
+                    'itemListElement' => array_map(fn($i, $p) => [
+                        '@type'    => 'ListItem',
+                        'position' => $i + 1,
+                        'name'     => place_display_name($p),
+                        'url'      => APP_URL . place_url($p),
+                    ], array_keys(array_slice($places, 0, 50)), array_slice($places, 0, 50)),
+                ],
+            ],
         ]);
         exit;
     }
@@ -231,28 +300,66 @@ if (isset(CATEGORIES[$catSlug])) {
     if (count($segments) === 3) {
         $place = Repo::bySlug($segments[2]);
         if (!$place || $place['category'] !== $catSlug) not_found();
+
+        // Leniwe reverse-geokodowanie adresu: raz na obiekt, wynik trafia do bazy
+        if ($place['address'] === null) {
+            $addr = reverse_geocode((float)$place['lat'], (float)$place['lon']);
+            if ($addr !== null) {
+                Repo::setAddress((int)$place['id'], $addr);
+                $place['address'] = $addr;
+            }
+        }
+
         $displayName = place_display_name($place);
         $equipment = place_equipment($place);
-        $nearby = array_filter(
+        $nearby = array_values(array_filter(
             Repo::nearby((float)$place['lat'], (float)$place['lon'], $catSlug, 10.0, 7),
             fn($p) => $p['id'] !== $place['id']
-        );
+        ));
+        $nearby = array_slice($nearby, 0, 6);
         $rating = Repo::ratingSummary((int)$place['id']);
+        $faq = SeoText::faq($place, $equipment, $displayName);
+
+        $crumbs = [['Start', '/'], [$cat['name'], '/' . $catSlug]];
+        if ($place['city_slug']) {
+            $crumbs[] = [$place['city'], city_url($catSlug, $place['city_slug'])];
+        }
+        $crumbs[] = [$displayName, place_url($place)];
+
         render_page('place', [
             'title'            => $displayName . ($place['city'] ? ' (' . $place['city'] . ')' : '') . ' — ' . $cat['singular'] . ' — ' . APP_NAME,
             'meta_description' => $cat['singular'] . ($place['city'] ? ' w mieście ' . $place['city'] : '') .
-                                  ($place['district'] ? ', ' . $place['district'] : '') . '. ' .
+                                  ($place['district'] ? ', ' . $place['district'] : '') .
+                                  ($place['address'] ? ' (' . $place['address'] . ')' : '') . '. ' .
                                   ($equipment ? 'Sprzęt: ' . implode(', ', array_slice($equipment, 0, 5)) . '. ' : '') .
-                                  'Mapa, dojazd i szczegóły obiektu.',
+                                  'Adres, mapa, dojazd i szczegóły obiektu.',
             'canonical'        => APP_URL . place_url($place),
+            'head_extra'       => '<meta name="geo.region" content="PL">' . "\n" .
+                                  '<meta name="geo.placename" content="' . e($place['city'] ?: 'Polska') . '">' . "\n" .
+                                  '<meta name="geo.position" content="' . $place['lat'] . ';' . $place['lon'] . '">' . "\n" .
+                                  '<meta name="ICBM" content="' . $place['lat'] . ', ' . $place['lon'] . '">',
             'catSlug'          => $catSlug,
             'cat'              => $cat,
             'place'            => $place,
             'displayName'      => $displayName,
             'equipment'        => $equipment,
-            'nearby'           => array_slice($nearby, 0, 6),
+            'nearby'           => $nearby,
             'reviews'          => Repo::reviews((int)$place['id']),
             'rating'           => $rating,
+            'description'      => SeoText::description($place, $equipment, $nearby),
+            'faq'              => $faq,
+            'jsonld'           => [
+                breadcrumb_schema($crumbs),
+                [
+                    '@context'   => 'https://schema.org',
+                    '@type'      => 'FAQPage',
+                    'mainEntity' => array_map(fn($f) => [
+                        '@type'          => 'Question',
+                        'name'           => $f[0],
+                        'acceptedAnswer' => ['@type' => 'Answer', 'text' => $f[1]],
+                    ], $faq),
+                ],
+            ],
         ]);
         exit;
     }
