@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /szukaj
+Disallow: /api/
+
+Sitemap: https://aktywnestrefy.pl/sitemap.xml

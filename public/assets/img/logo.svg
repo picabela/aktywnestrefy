@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 170" role="img" aria-label="forum aktywne strefy">
+  <!--
+    Wektorowa rekonstrukcja logo. Jeśli masz oryginalny plik PNG/SVG,
+    podmień ten plik zachowując nazwę logo.svg.
+  -->
+  <defs>
+    <style>
+      .t-black { fill: var(--ink, #191c1f); }
+      .t-red   { fill: #e0332c; }
+      .t-green { fill: #0d7a3f; }
+      text { font-family: 'Segoe UI', system-ui, sans-serif; font-weight: 800; }
+      .it { font-style: italic; }
+    </style>
+  </defs>
+
+  <!-- Zielony dymek (z tyłu) -->
+  <path class="t-green" d="M52 18h96a26 26 0 0 1 26 26v64a26 26 0 0 1-26 26h-20l14 26-40-26H52a26 26 0 0 1-26-26V44a26 26 0 0 1 26-26z" transform="translate(16 8)"/>
+  <!-- Czerwony dymek -->
+  <path class="t-red" d="M40 8h100a28 28 0 0 1 28 28v66a28 28 0 0 1-28 28H74l-32 30 6-30h-8a28 28 0 0 1-28-28V36a28 28 0 0 1 28-28z"/>
+
+  <!-- Biegacz z plecakiem (biały) -->
+  <g fill="#fff">
+    <circle cx="112" cy="35" r="12"/>
+    <!-- tułów -->
+    <path d="M104 46l16 4 6 20-8 18-14-6 6-16-10-6z"/>
+    <!-- plecak -->
+    <path d="M86 42c-8 2-12 10-10 18l4 14 14-4-4-14c-1-6 0-10-4-14z"/>
+    <!-- ręka przednia -->
+    <path d="M120 52l16 10-4 10-16-8z"/>
+    <!-- ręka tylna -->
+    <path d="M102 52l-14 6 2 10 14-4z"/>
+    <!-- noga przednia -->
+    <path d="M116 86l12 14-2 14-10-2 0-10-10-10z"/>
+    <!-- noga tylna -->
+    <path d="M104 84l-12 12-14 4 2 10 18-4 14-14z"/>
+  </g>
+
+  <!-- Teksty -->
+  <text x="200" y="52" font-size="52" class="t-black">forum</text>
+  <text x="200" y="106" font-size="54" class="t-red it">aktywne</text>
+  <text x="292" y="158" font-size="54" class="t-green it">strefy</text>
+</svg>
