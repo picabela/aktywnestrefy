@@ -1,3 +1,7 @@
+# Żywa baza danych — tworzona na serwerze z data/seed.sqlite przy pierwszym
+# uruchomieniu. NIE jest w repozytorium, żeby wgranie plików z GitHuba nigdy
+# nie nadpisało opinii użytkowników ani adresów uzupełnionych przez cron.
+data/aktywnestrefy.sqlite
 data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm

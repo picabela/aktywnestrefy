@@ -59,6 +59,23 @@ Baza tworzy się automatycznie w `data/aktywnestrefy.sqlite`.
    ```
 4. Zgłoś `https://aktywnestrefy.pl/sitemap.xml` w Google Search Console.
 
+### Baza danych a aktualizacje kodu (ważne!)
+
+W repozytorium jest tylko **`data/seed.sqlite`** — baza-ziarno z gotowym
+kompletem obiektów. Przy pierwszym uruchomieniu na serwerze aplikacja kopiuje
+ją automatycznie do **`data/aktywnestrefy.sqlite`** (żywej bazy). Żywa baza
+jest w `.gitignore`, więc:
+
+- **kolejne wgrania plików z GitHuba NIE nadpisują żywej bazy** — Twoje opinie
+  użytkowników, zgłoszenia i adresy uzupełnione przez cron są bezpieczne;
+- `data/seed.sqlite` to tylko punkt startowy — po wdrożeniu żyje własnym życiem
+  na serwerze i aktualizuje ją `bin/import.php` (obiekty) oraz cron (adresy).
+
+Przy aktualizacji kodu wgrywaj wszystko **oprócz** `data/aktywnestrefy.sqlite`
+(jeśli używasz `git pull` na serwerze, plik i tak jest ignorowany i nietykany).
+Jednorazowy backup żywej bazy przed większą zmianą: skopiuj
+`data/aktywnestrefy.sqlite` w bezpieczne miejsce.
+
 ## Struktura
 
 ```
@@ -66,6 +83,7 @@ config.php          konfiguracja, kategorie, słowniki tagów OSM → PL
 bin/import.php      importer Overpass API (upsert do SQLite)
 bin/geocode.php     dogęszczanie adresów obiektów (Nominatim, 1 zapyt./sek.)
 bin/cron-setup.php  wypisuje wpisy crona z automatycznie wykrytymi ścieżkami
+data/seed.sqlite    baza-ziarno (w repo); kopiowana do żywej bazy przy 1. starcie
 src/
   Database.php      połączenie + migracje SQLite
   Repo.php          zapytania (nearby, bbox, miasta, opinie…)
