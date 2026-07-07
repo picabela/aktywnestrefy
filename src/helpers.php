@@ -168,6 +168,66 @@ function reverse_geocode(float $lat, float $lon): ?string
     return $addr;
 }
 
+/**
+ * Wykrywa ścieżkę do binarki PHP CLI.
+ * W CLI używa dokładnego PHP_BINARY; w kontekście web (FPM/Apache) PHP_BINARY
+ * wskazuje na zły plik, więc sondujemy typowe lokalizacje interpretera CLI.
+ */
+function detect_php_cli(): string
+{
+    if (PHP_SAPI === 'cli' && PHP_BINARY !== '') {
+        return PHP_BINARY;
+    }
+    $v = PHP_MAJOR_VERSION . PHP_MINOR_VERSION; // np. "84"
+    $candidates = [
+        "/usr/local/bin/php{$v}", "/usr/bin/php{$v}",
+        "/usr/local/bin/php" . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
+        "/usr/bin/php" . PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION,
+        '/usr/local/bin/php', '/usr/bin/php', '/opt/php/bin/php',
+    ];
+    foreach ($candidates as $path) {
+        if (@is_executable($path)) {
+            return $path;
+        }
+    }
+    return 'php';
+}
+
+/**
+ * Zbiera dane potrzebne do skonfigurowania crona (wspólne dla CLI i web).
+ * @return array{root:string,php:string,dataDir:string,line1:string,line2:string,warnings:string[]}
+ */
+function cron_setup_info(): array
+{
+    $root    = ROOT_DIR;
+    $php     = detect_php_cli();
+    $dataDir = $root . '/data';
+    $import  = $root . '/bin/import.php';
+    $geocode = $root . '/bin/geocode.php';
+
+    $warnings = [];
+    foreach (['import.php' => $import, 'geocode.php' => $geocode] as $name => $path) {
+        if (!is_file($path)) {
+            $warnings[] = "Nie znaleziono pliku: $path";
+        }
+    }
+    if (is_dir($dataDir) && !is_writable($dataDir)) {
+        $warnings[] = "Katalog data/ nie jest zapisywalny — nadaj uprawnienia: chmod 775 $dataDir";
+    }
+    if ($php === 'php') {
+        $warnings[] = 'Nie udało się wykryć pełnej ścieżki PHP CLI — użyto ogólnego „php". Jeśli cron zgłosi błąd, wpisz pełną ścieżkę z panelu hostingu.';
+    }
+
+    return [
+        'root'     => $root,
+        'php'      => $php,
+        'dataDir'  => $dataDir,
+        'line1'    => sprintf('15 4 * * 1 %s %s >> %s/import.log 2>&1', $php, $import, $dataDir),
+        'line2'    => sprintf('30 2 * * * %s %s >> %s/geocode.log 2>&1', $php, $geocode, $dataDir),
+        'warnings' => $warnings,
+    ];
+}
+
 /** Render szablonu widoku */
 function view(string $template, array $data = []): string
 {

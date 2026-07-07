@@ -44,10 +44,12 @@ Baza tworzy się automatycznie w `data/aktywnestrefy.sqlite`.
 2. Upewnij się, że PHP ma rozszerzenia `pdo_sqlite` i `curl`, a katalog `data/`
    jest zapisywalny przez PHP.
 3. Ustaw crony. Gotowe wpisy z **automatycznie wykrytymi ścieżkami** serwera
-   wypisze skrypt (uruchom go na docelowym hostingu i skopiuj wynik):
-   ```
-   php bin/cron-setup.php
-   ```
+   pokaże skrypt — na dwa sposoby:
+   - **przez SSH:** `php bin/cron-setup.php`
+   - **przez przeglądarkę:** ustaw `CRON_SETUP_KEY` w `config.php` na losowy
+     ciąg i otwórz `https://aktywnestrefy.pl/cron-setup?key=TWOJ_KLUCZ`
+     (bez klucza strona jest niedostępna — chroni ścieżki serwera; po
+     skopiowaniu wpisów możesz z powrotem wyczyścić klucz)
    Wypisze m.in.:
    ```
    # odświeżanie danych z OpenStreetMap (poniedziałek 4:15)

@@ -214,6 +214,43 @@ if ($uri === '/o-serwisie') {
     exit;
 }
 
+// Podgląd wpisów crona (chroniony sekretnym kluczem)
+if ($uri === '/cron-setup') {
+    header('Content-Type: text/plain; charset=utf-8');
+    header('X-Robots-Tag: noindex, nofollow');
+
+    if (CRON_SETUP_KEY === '') {
+        http_response_code(403);
+        echo "Funkcja wyłączona.\n\n";
+        echo "Aby włączyć podgląd wpisów crona przez przeglądarkę, ustaw stałą\n";
+        echo "CRON_SETUP_KEY w pliku config.php na długi, losowy ciąg, a następnie\n";
+        echo "otwórz: " . APP_URL . "/cron-setup?key=TWOJ_KLUCZ\n";
+        exit;
+    }
+    // Porównanie odporne na timing; brak/zły klucz → 404 (funkcja niewidoczna)
+    if (!hash_equals(CRON_SETUP_KEY, (string)($_GET['key'] ?? ''))) {
+        not_found();
+    }
+
+    $info = cron_setup_info();
+    echo "════════════════════════════════════════════════════════════════════\n";
+    echo " AktywneStrefy.pl — wpisy CRON (ścieżki wykryte automatycznie)\n";
+    echo "════════════════════════════════════════════════════════════════════\n\n";
+    echo "Wykryta ścieżka projektu: {$info['root']}\n";
+    echo "Wykryta binarka PHP:      {$info['php']}\n\n";
+    foreach ($info['warnings'] as $w) {
+        echo "  ⚠ $w\n";
+    }
+    if ($info['warnings']) echo "\n";
+    echo "Skopiuj poniższe linie do konfiguracji crona w panelu hostingu:\n\n";
+    echo "# 1) Import danych z OpenStreetMap — poniedziałek 4:15 (~2–5 min)\n";
+    echo $info['line1'] . "\n\n";
+    echo "# 2) Uzupełnianie adresów obiektów — codziennie 2:30 (~11 min/porcję)\n";
+    echo $info['line2'] . "\n\n";
+    echo "════════════════════════════════════════════════════════════════════\n";
+    exit;
+}
+
 // Zgłoszenie błędu / opinia (POST)
 if ($uri === '/zglos' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     handle_post();

@@ -10,6 +10,14 @@ const APP_DOMAIN = 'aktywnestrefy.pl';
 const APP_URL    = 'https://aktywnestrefy.pl';
 const APP_EMAIL  = 'kontakt@aktywnestrefy.pl';
 
+/**
+ * Sekretny klucz do podglądu wpisów crona przez przeglądarkę:
+ *   https://aktywnestrefy.pl/cron-setup?key=TWOJ_KLUCZ
+ * Puste = funkcja wyłączona (bezpieczne domyślnie). Ustaw długi, losowy
+ * ciąg, żeby zobaczyć gotowe polecenia bez logowania się przez SSH.
+ */
+const CRON_SETUP_KEY = '';
+
 define('ROOT_DIR', __DIR__);
 define('DB_FILE', ROOT_DIR . '/data/aktywnestrefy.sqlite');
 
