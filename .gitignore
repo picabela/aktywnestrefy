@@ -8,4 +8,8 @@ data/*.sqlite-shm
 data/import.log
 data/geocode.log
 data/geocode.lock
+data/update.log
+data/update-download.zip
+data/update-tmp/
+data/backup-*.sqlite
 .DS_Store

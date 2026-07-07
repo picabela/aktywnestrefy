@@ -71,10 +71,24 @@ jest w `.gitignore`, więc:
 - `data/seed.sqlite` to tylko punkt startowy — po wdrożeniu żyje własnym życiem
   na serwerze i aktualizuje ją `bin/import.php` (obiekty) oraz cron (adresy).
 
-Przy aktualizacji kodu wgrywaj wszystko **oprócz** `data/aktywnestrefy.sqlite`
-(jeśli używasz `git pull` na serwerze, plik i tak jest ignorowany i nietykany).
-Jednorazowy backup żywej bazy przed większą zmianą: skopiuj
-`data/aktywnestrefy.sqlite` w bezpieczne miejsce.
+### Aktualizacja strony jednym kliknięciem — `update.php`
+
+Do aktualizacji służy **`public/update.php`** — samodzielny aktualizator,
+który sam pobiera najnowszą wersję z GitHuba i podmienia pliki, chroniąc
+dane produkcyjne (żywą bazę, logi, klucz `CRON_SETUP_KEY`) i robiąc przed
+podmianą kopię zapasową bazy (trzyma 5 ostatnich w `data/backup-*.sqlite`).
+
+- **przez przeglądarkę:** ustaw `CRON_SETUP_KEY` w `config.php`, otwórz
+  `https://aktywnestrefy.pl/update.php?key=TWOJ_KLUCZ` (podgląd planu),
+  potem to samo z dopiskiem `&run=1` (wykonanie);
+- **przez SSH:** `php public/update.php --run`.
+
+Masz na serwerze starszą wersję sprzed aktualizatora? Wgraj przez FTP sam
+plik `public/update.php` do katalogu `public/`, dopisz `CRON_SETUP_KEY`
+w `config.php` i uruchom przez przeglądarkę — reszta zaktualizuje się sama.
+Historia aktualizacji trafia do `data/update.log`. Jeśli repozytorium na
+GitHubie jest prywatne, wpisz token w stałej `GH_TOKEN` na początku
+`update.php`.
 
 ## Struktura
 
