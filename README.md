@@ -43,14 +43,17 @@ Baza tworzy się automatycznie w `data/aktywnestrefy.sqlite`.
    (reguły mod_rewrite są w `public/.htaccess`).
 2. Upewnij się, że PHP ma rozszerzenia `pdo_sqlite` i `curl`, a katalog `data/`
    jest zapisywalny przez PHP.
-3. Ustaw crony:
+3. Ustaw crony. Gotowe wpisy z **automatycznie wykrytymi ścieżkami** serwera
+   wypisze skrypt (uruchom go na docelowym hostingu i skopiuj wynik):
    ```
-   # odświeżanie danych z OpenStreetMap (raz w tygodniu, poniedziałek 4:15)
-   15 4 * * 1 php /sciezka/do/bin/import.php >> /sciezka/do/data/import.log 2>&1
-
-   # dogęszczanie adresów lokalizacji (co noc porcja 600 obiektów, ~11 minut;
-   # po kilkunastu nocach cała baza ma adresy, potem kończy się natychmiast)
-   30 2 * * * php /sciezka/do/bin/geocode.php >> /sciezka/do/data/geocode.log 2>&1
+   php bin/cron-setup.php
+   ```
+   Wypisze m.in.:
+   ```
+   # odświeżanie danych z OpenStreetMap (poniedziałek 4:15)
+   15 4 * * 1 /usr/bin/php /home/…/bin/import.php >> /home/…/data/import.log 2>&1
+   # dogęszczanie adresów (co noc porcja 600 obiektów, ~11 min)
+   30 2 * * * /usr/bin/php /home/…/bin/geocode.php >> /home/…/data/geocode.log 2>&1
    ```
 4. Zgłoś `https://aktywnestrefy.pl/sitemap.xml` w Google Search Console.
 
@@ -60,6 +63,7 @@ Baza tworzy się automatycznie w `data/aktywnestrefy.sqlite`.
 config.php          konfiguracja, kategorie, słowniki tagów OSM → PL
 bin/import.php      importer Overpass API (upsert do SQLite)
 bin/geocode.php     dogęszczanie adresów obiektów (Nominatim, 1 zapyt./sek.)
+bin/cron-setup.php  wypisuje wpisy crona z automatycznie wykrytymi ścieżkami
 src/
   Database.php      połączenie + migracje SQLite
   Repo.php          zapytania (nearby, bbox, miasta, opinie…)
