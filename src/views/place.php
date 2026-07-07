@@ -33,7 +33,7 @@ if ($rating['count'] > 0) {
   <a href="/">Start</a> ›
   <a href="/<?= e($catSlug) ?>"><?= e($cat['name']) ?></a> ›
   <?php if ($place['city_slug']): ?><a href="<?= e(city_url($catSlug, $place['city_slug'])) ?>"><?= e($place['city']) ?></a> ›<?php endif; ?>
-  <span><?= e($displayName) ?></span>
+  <span><?= e(place_breadcrumb_label($place)) ?></span>
 </nav>
 
 <section class="page-head" style="--cat-color: <?= e($cat['color']) ?>">

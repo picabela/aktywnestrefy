@@ -58,13 +58,62 @@ function city_url(string $category, string $citySlug): string
     return '/' . $category . '/' . $citySlug;
 }
 
-/** Nazwa wyświetlana obiektu (fallback gdy brak nazwy w OSM) */
+/** Ulica z adresu (bez kodu pocztowego), np. "Malborska 96" */
+function place_street(array $p): ?string
+{
+    if (empty($p['address'])) return null;
+    $street = trim(explode(',', $p['address'])[0]);
+    return $street !== '' ? $street : null;
+}
+
+/**
+ * Nazwa wyświetlana obiektu. Gdy OSM nie podaje nazwy, budujemy unikalną
+ * z kategorii + ulicy (lub dzielnicy/miasta), np. "Skatepark – Malborska 96".
+ */
 function place_display_name(array $p): string
 {
     if (!empty($p['name'])) return $p['name'];
     $cat = CATEGORIES[$p['category']]['singular'] ?? 'Obiekt';
-    $where = $p['district'] ? ($p['district'] . ', ' . $p['city']) : $p['city'];
-    return $where ? "$cat — $where" : $cat;
+    $loc = place_street($p) ?: ($p['district'] ?: ($p['city'] ?: null));
+    return $loc ? "$cat – $loc" : $cat;
+}
+
+/**
+ * Tytuł SEO karty obiektu — bez dublowania kategorii i miasta.
+ * Nazwane:    "Vert Ramp Płaszów — skatepark, Kraków | AktywneStrefy.pl"
+ * Bez nazwy:  "Skatepark Malborska 96, Kraków — mapa i dojazd | AktywneStrefy.pl"
+ */
+function place_seo_title(array $p): string
+{
+    $cat = CATEGORIES[$p['category']];
+    // Słowo kluczowe kategorii (pierwszy wyraz nazwy pojedynczej): siłownia/park/skatepark/pumptrack
+    $keyword = explode(' ', mb_strtolower($cat['singular']))[0];
+
+    if (!empty($p['name'])) {
+        $title = $p['name'];
+        if (mb_stripos($title, $keyword) === false) {
+            $title .= ' — ' . mb_strtolower($cat['singular']);
+        }
+        if ($p['city'] && mb_stripos($title, $p['city']) === false) {
+            $title .= (str_contains($title, ' — ') ? ', ' : ' — ') . $p['city'];
+        }
+        return $title . ' | ' . APP_NAME;
+    }
+
+    $loc = place_street($p) ?: $p['district'];
+    $title = $cat['singular']
+        . ($loc ? ' ' . $loc : '')
+        . ($p['city'] && mb_stripos((string)$loc, (string)$p['city']) === false ? ', ' . $p['city'] : '');
+    return $title . ' — mapa i dojazd | ' . APP_NAME;
+}
+
+/** Krótka etykieta obiektu do breadcrumbów (miasto jest już we wcześniejszym okruszku) */
+function place_breadcrumb_label(array $p): string
+{
+    if (!empty($p['name'])) return $p['name'];
+    $cat = CATEGORIES[$p['category']]['singular'] ?? 'Obiekt';
+    $loc = place_street($p) ?: $p['district'];
+    return $loc ? "$cat – $loc" : $cat;
 }
 
 /** Lista sprzętu (JSON → tablica polskich etykiet) */

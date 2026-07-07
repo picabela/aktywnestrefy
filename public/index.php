@@ -324,10 +324,10 @@ if (isset(CATEGORIES[$catSlug])) {
         if ($place['city_slug']) {
             $crumbs[] = [$place['city'], city_url($catSlug, $place['city_slug'])];
         }
-        $crumbs[] = [$displayName, place_url($place)];
+        $crumbs[] = [place_breadcrumb_label($place), place_url($place)];
 
         render_page('place', [
-            'title'            => $displayName . ($place['city'] ? ' (' . $place['city'] . ')' : '') . ' — ' . $cat['singular'] . ' — ' . APP_NAME,
+            'title'            => place_seo_title($place),
             'meta_description' => $cat['singular'] . ($place['city'] ? ' w mieście ' . $place['city'] : '') .
                                   ($place['district'] ? ', ' . $place['district'] : '') .
                                   ($place['address'] ? ' (' . $place['address'] . ')' : '') . '. ' .
