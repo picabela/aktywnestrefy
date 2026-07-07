@@ -12,4 +12,5 @@ data/update.log
 data/update-download.zip
 data/update-tmp/
 data/backup-*.sqlite
+data/installed-version.txt
 .DS_Store

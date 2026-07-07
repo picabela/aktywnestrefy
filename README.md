@@ -86,9 +86,14 @@ podmianą kopię zapasową bazy (trzyma 5 ostatnich w `data/backup-*.sqlite`).
 Masz na serwerze starszą wersję sprzed aktualizatora? Wgraj przez FTP sam
 plik `public/update.php` do katalogu `public/`, dopisz `CRON_SETUP_KEY`
 w `config.php` i uruchom przez przeglądarkę — reszta zaktualizuje się sama.
-Historia aktualizacji trafia do `data/update.log`. Jeśli repozytorium na
-GitHubie jest prywatne, wpisz token w stałej `GH_TOKEN` na początku
-`update.php`.
+Aktualizator **sam sprawdza, czy jest coś nowego**: pobiera z GitHub API
+identyfikator najnowszego commita (SHA) i porównuje go z zapisanym w
+`data/installed-version.txt`. Jeśli wersje są równe, w trybie podglądu
+napisze „masz już najnowszą wersję", a `--run` nic nie zrobi (chyba że
+wymusisz `--force` / `&force=1`). Gdy API jest nieosiągalne, aktualizacja
+i tak zadziała (bezpieczny fallback). Historia trafia do `data/update.log`.
+Jeśli repozytorium na GitHubie jest prywatne, wpisz token w stałej
+`GH_TOKEN` na początku `update.php`.
 
 ## Struktura
 

@@ -68,6 +68,8 @@ if (!$isCli) {
 }
 
 $doRun = $isCli ? in_array('--run', $_SERVER['argv'] ?? [], true) : isset($_GET['run']);
+// --force / &force=1 — aktualizuj nawet gdy wersja jest już aktualna
+$force = $isCli ? in_array('--force', $_SERVER['argv'] ?? [], true) : isset($_GET['force']);
 
 // Lokalny plik zip zamiast pobierania — wyłącznie z CLI (do testów)
 $localZip = null;
@@ -79,6 +81,12 @@ if ($isCli) {
     }
 }
 
+/* ── Sprawdzenie wersji: lokalny SHA vs najnowszy commit na GitHubie ── */
+$versionFile = $root . '/data/installed-version.txt';
+$installedSha = is_file($versionFile) ? trim((string)file_get_contents($versionFile)) : '';
+$remoteSha = $localZip !== null ? null : github_latest_sha();
+$upToDate  = $remoteSha !== null && $installedSha !== '' && $installedSha === $remoteSha;
+
 /* ── Plan / nagłówek ──────────────────────────────────────────── */
 out('════════════════════════════════════════════════════════════════');
 out(' AktywneStrefy.pl — aktualizator');
@@ -86,6 +94,21 @@ out('═════════════════════════
 out('');
 out('Katalog projektu: ' . $root);
 out('Źródło: github.com/' . GH_OWNER . '/' . GH_REPO . ' (gałąź: ' . GH_BRANCH . ')');
+out('');
+
+// Status wersji
+if ($localZip !== null) {
+    out('Wersja: pomijam sprawdzanie (lokalna paczka).');
+} elseif ($remoteSha === null) {
+    out('Wersja: nie udało się sprawdzić najnowszej wersji na GitHubie');
+    out('        (brak sieci lub limit zapytań) — aktualizacja i tak zadziała.');
+} else {
+    out('Zainstalowana wersja: ' . ($installedSha !== '' ? substr($installedSha, 0, 7) : 'nieznana (pierwsza aktualizacja)'));
+    out('Najnowsza na GitHubie: ' . substr($remoteSha, 0, 7));
+    out($upToDate
+        ? 'Status: ✓ masz już najnowszą wersję.'
+        : 'Status: ⟳ dostępna jest nowsza wersja.');
+}
 out('');
 out('Chronione (nigdy nie nadpisywane):');
 out('  • data/aktywnestrefy.sqlite — żywa baza (opinie, oceny, adresy)');
@@ -104,9 +127,23 @@ if (!is_writable($root)) {
 if (!$doRun) {
     out('To był tylko podgląd — nic nie zostało zmienione.');
     out('');
-    out($isCli
-        ? 'Aby wykonać aktualizację, uruchom:  php public/update.php --run'
-        : 'Aby wykonać aktualizację, otwórz ten sam adres z dopiskiem &run=1');
+    if ($upToDate && !$force) {
+        out('Nie ma nic do zaktualizowania. Gdybyś mimo to chciał wymusić ponowne');
+        out($isCli
+            ? 'wgranie plików, użyj:  php public/update.php --run --force'
+            : 'wgranie plików, dodaj do adresu:  &run=1&force=1');
+    } else {
+        out($isCli
+            ? 'Aby wykonać aktualizację, uruchom:  php public/update.php --run'
+            : 'Aby wykonać aktualizację, otwórz ten sam adres z dopiskiem &run=1');
+    }
+    exit(0);
+}
+
+// Wykonanie wstrzymane, gdy wersja jest już aktualna (chyba że --force)
+if ($upToDate && !$force) {
+    out('✓ Masz już najnowszą wersję — nie ma nic do zaktualizowania.');
+    out('  (Aby mimo to wymusić ponowne wgranie plików, dodaj --force / &force=1.)');
     exit(0);
 }
 
@@ -214,11 +251,17 @@ if ($secret !== '') {
     }
 }
 
-/* ── 6. Sprzątanie i wpis do logu ─────────────────────────────── */
+/* ── 6. Zapis wersji, sprzątanie i wpis do logu ───────────────── */
+// Zapamiętaj wgrany SHA, żeby następnym razem wiedzieć, czy jest coś nowego
+if ($remoteSha !== null) {
+    file_put_contents($versionFile, $remoteSha . "\n");
+    out('→ Zapisano wersję: ' . substr($remoteSha, 0, 7));
+}
 rrmdir($tmpDir);
 file_put_contents(
     $dataDir . '/update.log',
-    '[' . date('Y-m-d H:i:s') . '] aktualizacja OK — plików: ' . $stats['copied'] . "\n",
+    '[' . date('Y-m-d H:i:s') . '] aktualizacja OK — plików: ' . $stats['copied']
+        . ($remoteSha !== null ? ' — wersja ' . substr($remoteSha, 0, 7) : '') . "\n",
     FILE_APPEND
 );
 
@@ -229,6 +272,35 @@ out('  Historia aktualizacji: data/update.log');
 out('════════════════════════════════════════════════════════════════');
 
 /* ── Funkcje pomocnicze ───────────────────────────────────────── */
+
+/**
+ * Najnowszy SHA commita gałęzi z GitHub API (identyfikuje wersję kodu).
+ * Zwraca 40-znakowy hash albo null, gdy nie udało się sprawdzić.
+ */
+function github_latest_sha(): ?string
+{
+    $url = 'https://api.github.com/repos/' . GH_OWNER . '/' . GH_REPO
+         . '/commits/' . rawurlencode(GH_BRANCH);
+    $headers = ['User-Agent: AktywneStrefy-Updater', 'Accept: application/vnd.github+json'];
+    if (GH_TOKEN !== '') {
+        $headers[] = 'Authorization: Bearer ' . GH_TOKEN;
+    }
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_HTTPHEADER     => $headers,
+    ]);
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+    if ($body === false || $status !== 200) {
+        return null;
+    }
+    $sha = json_decode((string)$body, true)['sha'] ?? null;
+    return (is_string($sha) && preg_match('/^[0-9a-f]{40}$/', $sha)) ? $sha : null;
+}
 
 /** Czy ścieżka względna (od katalogu projektu) jest chroniona przed nadpisaniem? */
 function is_protected(string $rel): bool
