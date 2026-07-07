@@ -9,11 +9,11 @@ declare(strict_types=1);
  * więc każdorazowe uruchomienie dogęszcza kolejną porcję rekordów.
  *
  * Użycie:
- *   php bin/geocode.php                 # domyślnie do 600 obiektów (~11 minut)
+ *   php bin/geocode.php                 # domyślnie do 2000 obiektów (~30 minut)
  *   php bin/geocode.php --limit=100     # mniejsza porcja
  *   php bin/geocode.php --limit=0       # bez limitu (całość, może trwać godziny)
  *
- * Cron (co noc o 2:30 dogęszcza kolejne 600 adresów, aż braknie zaległości):
+ * Cron (co noc o 2:30 dogęszcza kolejne 2000 adresów, aż braknie zaległości):
  *   30 2 * * * php /sciezka/do/bin/geocode.php >> /sciezka/do/data/geocode.log 2>&1
  */
 
@@ -22,7 +22,7 @@ require ROOT_DIR . '/src/helpers.php';
 require ROOT_DIR . '/src/Database.php';
 
 $options = getopt('', ['limit::']);
-$limit = isset($options['limit']) ? max(0, (int)$options['limit']) : 600;
+$limit = isset($options['limit']) ? max(0, (int)$options['limit']) : 2000;
 
 // Blokada przed nakładaniem się uruchomień z crona
 $lockFile = fopen(ROOT_DIR . '/data/geocode.lock', 'c');
