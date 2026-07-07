@@ -40,7 +40,9 @@ if ($total === 0) {
 }
 
 $batch = $limit > 0 ? min($limit, $total) : $total;
+echo '════ START ' . date('Y-m-d H:i:s') . " ════\n";
 echo '→ Obiektów bez adresu: ' . $total . '; w tym przebiegu przetworzę: ' . $batch . "\n";
+$startTime = time();
 
 $st = $pdo->prepare('SELECT id, lat, lon FROM places WHERE address IS NULL ORDER BY id LIMIT ?');
 $st->execute([$batch]);
@@ -83,4 +85,6 @@ foreach ($rows as $row) {
 }
 
 $left = (int)$pdo->query('SELECT COUNT(*) FROM places WHERE address IS NULL')->fetchColumn();
+$elapsed = time() - $startTime;
 echo "✓ Przetworzono: $done, znalezionych adresów: $found, pozostało w kolejce: $left\n";
+echo '════ KONIEC ' . date('Y-m-d H:i:s') . " (czas: {$elapsed}s) ════\n\n";
